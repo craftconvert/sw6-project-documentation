@@ -1,0 +1,11 @@
+{
+  "main.js": {
+    "file": "js/craft-convert-project-documentation.js",
+    "name": "craft-convert-project-documentation",
+    "src": "main.js",
+    "isEntry": true,
+    "css": [
+      "css/craft-convert-project-documentation.css"
+    ]
+  }
+}

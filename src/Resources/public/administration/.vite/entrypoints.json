@@ -1,0 +1,25 @@
+{
+  "base": "/bundles/craftconvertprojectdocumentation/administration/",
+  "entryPoints": {
+    "craft-convert-project-documentation": {
+      "css": [
+        "/bundles/craftconvertprojectdocumentation/administration/css/craft-convert-project-documentation.css"
+      ],
+      "dynamic": [],
+      "js": [
+        "/bundles/craftconvertprojectdocumentation/administration/js/craft-convert-project-documentation.js"
+      ],
+      "legacy": false,
+      "preload": []
+    }
+  },
+  "legacy": false,
+  "metadatas": {},
+  "version": [
+    "7.0.4",
+    7,
+    0,
+    4
+  ],
+  "viteServer": null
+}
