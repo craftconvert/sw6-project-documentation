@@ -1,0 +1,14 @@
+parameters:
+    # Documentation sets configuration
+    # Override in your project's config/packages/cc_project_documentation.yaml to customize
+    cc.project_documentation.sets:
+        project:
+            label: 'Project'
+            icon: 'regular-book-user'
+            paths:
+                - '%kernel.project_dir%/custom/docs/project'
+
+    # Optional: Path to dashboard card image (relative to public/bundles/)
+    # Example: 'craftconverttheme/static/img/documentation.png'
+    # Leave empty or remove to hide the image
+    cc.project_documentation.dashboard_image: ~

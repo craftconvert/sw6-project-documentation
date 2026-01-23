@@ -1,0 +1,36 @@
+{% block cc_doc_set_switcher %}
+<div class="cc-doc-set-switcher">
+    <sw-single-select
+        :value="currentSet"
+        :options="setOptions"
+        value-property="value"
+        label-property="label"
+        :show-clearable-button="false"
+        :searchable="false"
+        size="small"
+        @update:value="onSetChange"
+    >
+        <template #selection-label-property="{ item }">
+            <div class="cc-doc-set-switcher__option">
+                <sw-icon
+                    v-if="item.icon"
+                    :name="item.icon"
+                    size="16"
+                />
+                <span>{{ item.label }}</span>
+            </div>
+        </template>
+
+        <template #result-label-property="{ item }">
+            <div class="cc-doc-set-switcher__option">
+                <sw-icon
+                    v-if="item.icon"
+                    :name="item.icon"
+                    size="16"
+                />
+                <span>{{ item.label }}</span>
+            </div>
+        </template>
+    </sw-single-select>
+</div>
+{% endblock %}

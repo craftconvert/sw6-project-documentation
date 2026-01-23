@@ -1,0 +1,35 @@
+{
+    "cc-project-documentation": {
+        "general": {
+            "title": "Documentation",
+            "description": "Project Documentation Center",
+            "placeholderSearch": "Search documentation..."
+        },
+        "sidebar": {
+            "title": "Navigation"
+        },
+        "content": {
+            "lastUpdated": "Last updated",
+            "notFound": "Document not found",
+            "notFoundMessage": "The requested document could not be found. Please select a document from the sidebar.",
+            "loading": "Loading document..."
+        },
+        "toc": {
+            "title": "On this page"
+        },
+        "search": {
+            "placeholder": "Search...",
+            "noResults": "No results found",
+            "resultsFor": "Results for"
+        },
+        "pagination": {
+            "previous": "Previous",
+            "next": "Next"
+        },
+        "dashboard": {
+            "title": "Platform Documentation",
+            "description": "Guides, instructions, and reference material for all features of the webshop.",
+            "buttonLabel": "View Documentation"
+        }
+    }
+}

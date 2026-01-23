@@ -1,0 +1,37 @@
+{% block sw_dashboard_index_content_intro_card %}
+    {% parent %}
+
+    {% block sw_dashboard_index_documentation_card %}
+    <div
+        v-if="canViewDocumentation"
+        class="sw-dashboard-index__documentation-card"
+    >
+        <div class="sw-dashboard-index__documentation-card-content">
+            <div
+                v-if="hasDashboardImage"
+                class="sw-dashboard-index__documentation-card-icon"
+            >
+                <img
+                    :src="dashboardImageSrc"
+                    alt="Documentation"
+                />
+            </div>
+            <div class="sw-dashboard-index__documentation-card-text">
+                <h3 class="sw-dashboard-index__documentation-card-title">
+                    {{ $tc('cc-project-documentation.dashboard.title') }}
+                </h3>
+                <p class="sw-dashboard-index__documentation-card-description">
+                    {{ $tc('cc-project-documentation.dashboard.description') }}
+                </p>
+            </div>
+            <sw-button
+                variant="primary"
+                size="small"
+                @click="navigateToDocumentation"
+            >
+                {{ $tc('cc-project-documentation.dashboard.buttonLabel') }}
+            </sw-button>
+        </div>
+    </div>
+    {% endblock %}
+{% endblock %}

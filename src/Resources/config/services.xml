@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <imports>
+        <import resource="services.yaml"/>
+    </imports>
+
+    <services>
+        <service id="CraftConvert\ProjectDocumentation\Documentation\DocumentationScanner" public="true">
+            <argument type="service" id="kernel"/>
+            <argument type="service" id="Shopware\Core\Framework\Plugin\KernelPluginLoader\KernelPluginLoader"/>
+            <argument type="service" id="cache.object"/>
+            <argument>%cc.project_documentation.sets%</argument>
+        </service>
+
+        <service id="CraftConvert\ProjectDocumentation\Documentation\MarkdownParser" public="true"/>
+
+        <service id="CraftConvert\ProjectDocumentation\Documentation\SearchIndexer" public="true">
+            <argument type="service" id="CraftConvert\ProjectDocumentation\Documentation\DocumentationScanner"/>
+        </service>
+
+        <service id="CraftConvert\ProjectDocumentation\Api\Controller\DocumentationController" public="true">
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+
+            <argument type="service" id="CraftConvert\ProjectDocumentation\Documentation\DocumentationScanner"/>
+            <argument type="service" id="CraftConvert\ProjectDocumentation\Documentation\MarkdownParser"/>
+            <argument type="service" id="CraftConvert\ProjectDocumentation\Documentation\SearchIndexer"/>
+            <argument>%cc.project_documentation.dashboard_image%</argument>
+        </service>
+    </services>
+</container>

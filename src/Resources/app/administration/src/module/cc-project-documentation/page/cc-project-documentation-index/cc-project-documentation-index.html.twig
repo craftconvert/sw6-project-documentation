@@ -1,0 +1,167 @@
+{% block cc_project_documentation_index %}
+<sw-page class="cc-project-documentation-index">
+
+    {% block cc_project_documentation_index_smart_bar_header %}
+    <template #smart-bar-header>
+        <h2>{{ $tc('cc-project-documentation.general.title') }}</h2>
+    </template>
+    {% endblock %}
+
+    {% block cc_project_documentation_index_smart_bar_actions %}
+    <template #smart-bar-actions>
+        <cc-doc-search
+            @search="onSearch"
+            @select="onNavigate"
+            :results="searchResults"
+            :is-loading="isSearching"
+        />
+    </template>
+    {% endblock %}
+
+    {% block cc_project_documentation_index_content %}
+    <template #content>
+        <sw-loader v-if="isLoading" />
+
+        <div v-else class="cc-project-documentation-index__wrapper">
+            {% block cc_project_documentation_index_mobile_nav %}
+            <div class="cc-project-documentation-index__mobile-nav">
+                {% block cc_project_documentation_index_mobile_set_switcher %}
+                <cc-doc-set-switcher
+                    v-if="hasMultipleSets"
+                    :sets="availableSets"
+                    :current-set="currentSet"
+                    @change="onSetChange"
+                />
+                {% endblock %}
+
+                {% block cc_project_documentation_index_mobile_dropdown %}
+                <div class="cc-project-documentation-index__mobile-dropdown">
+                    <button
+                        class="cc-project-documentation-index__mobile-toggle"
+                        :class="{ 'is--open': isMobileNavOpen }"
+                        @click="toggleMobileNav"
+                    >
+                        <sw-icon name="regular-bars" size="16px" />
+                        <span class="cc-project-documentation-index__mobile-current">
+                            <template v-if="currentDocumentSection && currentDocumentLabel">
+                                <span class="cc-project-documentation-index__mobile-section">{{ currentDocumentSection }}</span>
+                                <span class="cc-project-documentation-index__mobile-separator">/</span>
+                            </template>
+                            {{ currentDocumentLabel || $tc('cc-project-documentation.sidebar.title') }}
+                        </span>
+                        <sw-icon
+                            :name="isMobileNavOpen ? 'regular-chevron-up-xs' : 'regular-chevron-down-xs'"
+                            size="12px"
+                        />
+                    </button>
+
+                    <div
+                        v-if="isMobileNavOpen"
+                        class="cc-project-documentation-index__mobile-menu"
+                    >
+                        <cc-doc-sidebar
+                            :navigation-tree="navigationTree"
+                            :current-path="currentPath"
+                            @navigate="onMobileNavigate"
+                        />
+                    </div>
+                </div>
+                {% endblock %}
+            </div>
+            {% endblock %}
+
+            {% block cc_project_documentation_index_sidebar_container %}
+            <div class="cc-project-documentation-index__sidebar-container">
+                {% block cc_project_documentation_index_set_switcher %}
+                <cc-doc-set-switcher
+                    v-if="hasMultipleSets"
+                    :sets="availableSets"
+                    :current-set="currentSet"
+                    @change="onSetChange"
+                />
+                {% endblock %}
+
+                {% block cc_project_documentation_index_sidebar %}
+                <div class="cc-project-documentation-index__sidebar">
+                    <cc-doc-sidebar
+                        :navigation-tree="navigationTree"
+                        :current-path="currentPath"
+                        @navigate="onNavigate"
+                    />
+                </div>
+                {% endblock %}
+            </div>
+            {% endblock %}
+
+            {% block cc_project_documentation_index_main %}
+            <div class="cc-project-documentation-index__main">
+                <cc-doc-content
+                    :document="currentDocument"
+                    :is-loading="isLoadingDocument"
+                >
+                    {% block cc_project_documentation_index_pagination %}
+                    <template #pagination>
+                        <nav
+                            v-if="previousDocument || nextDocument"
+                            class="cc-project-documentation-index__pagination"
+                        >
+                            <a
+                                v-if="previousDocument"
+                                href="#"
+                                class="cc-project-documentation-index__pagination-link cc-project-documentation-index__pagination-link--prev"
+                                @click.prevent="onNavigate(previousDocument.path)"
+                            >
+                                <sw-icon name="regular-chevron-left-s" size="20px" />
+                                <div class="cc-project-documentation-index__pagination-text">
+                                    <span class="cc-project-documentation-index__pagination-label">
+                                        {{ $tc('cc-project-documentation.pagination.previous') }}
+                                    </span>
+                                    <span class="cc-project-documentation-index__pagination-section">
+                                        {{ previousDocument.section }}
+                                    </span>
+                                    <span class="cc-project-documentation-index__pagination-title">
+                                        {{ previousDocument.label }}
+                                    </span>
+                                </div>
+                            </a>
+
+                            <a
+                                v-if="nextDocument"
+                                href="#"
+                                class="cc-project-documentation-index__pagination-link cc-project-documentation-index__pagination-link--next"
+                                @click.prevent="onNavigate(nextDocument.path)"
+                            >
+                                <div class="cc-project-documentation-index__pagination-text">
+                                    <span class="cc-project-documentation-index__pagination-label">
+                                        {{ $tc('cc-project-documentation.pagination.next') }}
+                                    </span>
+                                    <span class="cc-project-documentation-index__pagination-section">
+                                        {{ nextDocument.section }}
+                                    </span>
+                                    <span class="cc-project-documentation-index__pagination-title">
+                                        {{ nextDocument.label }}
+                                    </span>
+                                </div>
+                                <sw-icon name="regular-chevron-right-s" size="20px" />
+                            </a>
+                        </nav>
+                    </template>
+                    {% endblock %}
+                </cc-doc-content>
+            </div>
+            {% endblock %}
+
+            {% block cc_project_documentation_index_toc %}
+            <div class="cc-project-documentation-index__toc">
+                <cc-doc-toc
+                    v-if="currentDocument"
+                    :toc="currentDocument.toc"
+                />
+            </div>
+            {% endblock %}
+        </div>
+    </template>
+    {% endblock %}
+
+</sw-page>
+{% endblock %}

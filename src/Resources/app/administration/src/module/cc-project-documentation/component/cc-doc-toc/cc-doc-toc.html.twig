@@ -1,0 +1,31 @@
+{% block cc_doc_toc %}
+<div class="cc-doc-toc">
+
+    {% block cc_doc_toc_header %}
+    <div class="cc-doc-toc__header">
+        {{ $tc('cc-project-documentation.toc.title') }}
+    </div>
+    {% endblock %}
+
+    {% block cc_doc_toc_list %}
+    <ul class="cc-doc-toc__list">
+        <li
+            v-for="item in filteredToc"
+            :key="item.id"
+            class="cc-doc-toc__item"
+            :class="getIndentClass(item.level)"
+        >
+            <a
+                href="#"
+                class="cc-doc-toc__link"
+                :class="{ 'is--active': isActive(item.id) }"
+                @click.prevent="scrollToHeading(item.id)"
+            >
+                {{ item.text }}
+            </a>
+        </li>
+    </ul>
+    {% endblock %}
+
+</div>
+{% endblock %}

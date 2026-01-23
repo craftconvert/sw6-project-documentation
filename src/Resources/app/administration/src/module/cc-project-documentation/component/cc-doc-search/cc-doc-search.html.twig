@@ -1,0 +1,65 @@
+{% block cc_doc_search %}
+<div class="cc-doc-search">
+
+    {% block cc_doc_search_input %}
+    <div class="cc-doc-search__input-wrapper">
+        <sw-icon name="regular-search" size="16px" class="cc-doc-search__icon" />
+        <input
+            type="text"
+            v-model="searchTerm"
+            :placeholder="$tc('cc-project-documentation.search.placeholder')"
+            class="cc-doc-search__input"
+            @focus="onFocus"
+            @blur="onBlur"
+        />
+        <button
+            v-if="searchTerm"
+            class="cc-doc-search__clear"
+            @click="clearSearch"
+        >
+            <sw-icon name="regular-times-xs" size="12px" />
+        </button>
+    </div>
+    {% endblock %}
+
+    {% block cc_doc_search_results %}
+    <div
+        v-if="showResults"
+        class="cc-doc-search__results"
+    >
+        {% block cc_doc_search_loading %}
+        <div v-if="isLoading" class="cc-doc-search__loading">
+            <sw-loader size="20px" />
+        </div>
+        {% endblock %}
+
+        {% block cc_doc_search_no_results %}
+        <div v-else-if="!hasResults && searchTerm.length >= 2" class="cc-doc-search__no-results">
+            {{ $tc('cc-project-documentation.search.noResults') }}
+        </div>
+        {% endblock %}
+
+        {% block cc_doc_search_result_items %}
+        <ul v-else-if="hasResults" class="cc-doc-search__list">
+            <li
+                v-for="result in results"
+                :key="result.path"
+                class="cc-doc-search__item"
+            >
+                <a
+                    href="#"
+                    class="cc-doc-search__link"
+                    @click.prevent="onSelect(result.path)"
+                >
+                    <strong class="cc-doc-search__title">{{ result.title }}</strong>
+                    <span class="cc-doc-search__excerpt">{{ result.excerpt }}</span>
+                    <span class="cc-doc-search__path">{{ result.path }}</span>
+                </a>
+            </li>
+        </ul>
+        {% endblock %}
+    </div>
+    {% endblock %}
+
+</div>
+{% endblock %}

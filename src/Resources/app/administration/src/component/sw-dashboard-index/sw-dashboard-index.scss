@@ -1,0 +1,57 @@
+.sw-dashboard-index__documentation-card {
+    max-width: 960px;
+    margin: 32px auto;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        transform: translateY(-1px);
+    }
+}
+
+.sw-dashboard-index__documentation-card-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 24px;
+}
+
+.sw-dashboard-index__documentation-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 12px;
+    }
+}
+
+.sw-dashboard-index__documentation-card-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.sw-dashboard-index__documentation-card-title {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.4;
+}
+
+.sw-dashboard-index__documentation-card-description {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+}

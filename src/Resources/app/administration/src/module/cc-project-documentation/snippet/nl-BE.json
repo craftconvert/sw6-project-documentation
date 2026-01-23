@@ -1,0 +1,35 @@
+{
+    "cc-project-documentation": {
+        "general": {
+            "title": "Documentatie",
+            "description": "Project Documentatie Centrum",
+            "placeholderSearch": "Documentatie doorzoeken..."
+        },
+        "sidebar": {
+            "title": "Navigatie"
+        },
+        "content": {
+            "lastUpdated": "Laatst bijgewerkt",
+            "notFound": "Document niet gevonden",
+            "notFoundMessage": "Het opgevraagde document kon niet worden gevonden. Selecteer een document uit de zijbalk.",
+            "loading": "Document laden..."
+        },
+        "toc": {
+            "title": "Op deze pagina"
+        },
+        "search": {
+            "placeholder": "Zoeken...",
+            "noResults": "Geen resultaten gevonden",
+            "resultsFor": "Resultaten voor"
+        },
+        "pagination": {
+            "previous": "Vorige",
+            "next": "Volgende"
+        },
+        "dashboard": {
+            "title": "Platform Documentatie",
+            "description": "Handleidingen, instructies en naslagmateriaal voor alle functies van de webshop.",
+            "buttonLabel": "Bekijk Documentatie"
+        }
+    }
+}

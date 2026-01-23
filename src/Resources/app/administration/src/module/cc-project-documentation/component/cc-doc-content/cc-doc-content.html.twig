@@ -1,0 +1,39 @@
+{% block cc_doc_content %}
+<div class="cc-doc-content">
+
+    {% block cc_doc_content_loading %}
+    <sw-loader v-if="isLoading" />
+    {% endblock %}
+
+    {% block cc_doc_content_not_found %}
+    <div v-else-if="!document" class="cc-doc-content__not-found">
+        <sw-icon name="regular-exclamation-circle" size="64px" />
+        <h2>{{ $tc('cc-project-documentation.content.notFound') }}</h2>
+        <p>{{ $tc('cc-project-documentation.content.notFoundMessage') }}</p>
+    </div>
+    {% endblock %}
+
+    {% block cc_doc_content_body %}
+    <div v-else class="cc-doc-content__body">
+        {% block cc_doc_content_article %}
+        <article
+            class="cc-doc-content__article"
+            v-html="renderedContent"
+        />
+        {% endblock %}
+
+        {% block cc_doc_content_pagination %}
+        <slot name="pagination"></slot>
+        {% endblock %}
+
+        {% block cc_doc_content_meta %}
+        <div v-if="document.lastModified" class="cc-doc-content__meta">
+            <sw-icon name="regular-clock" size="14px" />
+            <span>{{ $tc('cc-project-documentation.content.lastUpdated') }}: {{ formattedDate }}</span>
+        </div>
+        {% endblock %}
+    </div>
+    {% endblock %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% block cc_doc_sidebar %}
+<div class="cc-doc-sidebar">
+    {% block cc_doc_sidebar_trees %}
+    <div
+        v-for="(tree, treeIndex) in navigationTree"
+        :key="treeIndex"
+        class="cc-doc-sidebar__tree"
+    >
+        {% block cc_doc_sidebar_tree_header %}
+        <div class="cc-doc-sidebar__tree-header">
+            <sw-icon :name="getIcon(tree)" size="16px" />
+            <span>{{ tree.label }}</span>
+        </div>
+        {% endblock %}
+
+        {% block cc_doc_sidebar_items %}
+        <ul class="cc-doc-sidebar__items">
+            <li
+                v-for="(item, itemIndex) in tree.items"
+                :key="itemIndex"
+                class="cc-doc-sidebar__item"
+            >
+                {% block cc_doc_sidebar_item_link %}
+                <template v-if="item.path">
+                    <a
+                        href="#"
+                        class="cc-doc-sidebar__link"
+                        :class="{ 'is--active': isActive(item.path) }"
+                        @click.prevent="onNavigate(item.path)"
+                    >
+                        {{ item.label }}
+                    </a>
+                </template>
+                {% endblock %}
+
+                {% block cc_doc_sidebar_item_section %}
+                <template v-else-if="item.children">
+                    <button
+                        class="cc-doc-sidebar__section-toggle"
+                        :class="{ 'is--expanded': isExpanded(`${treeIndex}-${itemIndex}`) }"
+                        @click="toggleSection(`${treeIndex}-${itemIndex}`)"
+                    >
+                        <sw-icon
+                            name="regular-chevron-right-xs"
+                            size="12px"
+                            class="cc-doc-sidebar__chevron"
+                        />
+                        <span>{{ item.label }}</span>
+                    </button>
+
+                    <ul
+                        v-if="isExpanded(`${treeIndex}-${itemIndex}`)"
+                        class="cc-doc-sidebar__children"
+                    >
+                        <li
+                            v-for="(child, childIndex) in item.children"
+                            :key="childIndex"
+                            class="cc-doc-sidebar__child"
+                        >
+                            <a
+                                href="#"
+                                class="cc-doc-sidebar__link"
+                                :class="{ 'is--active': isActive(child.path) }"
+                                @click.prevent="onNavigate(child.path)"
+                            >
+                                {{ child.label }}
+                            </a>
+                        </li>
+                    </ul>
+                </template>
+                {% endblock %}
+            </li>
+        </ul>
+        {% endblock %}
+    </div>
+    {% endblock %}
+</div>
+{% endblock %}

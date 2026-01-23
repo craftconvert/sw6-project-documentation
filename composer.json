@@ -1,0 +1,52 @@
+{
+  "name": "craftconvert/sw6-project-documentation",
+  "description": "Craft Convert: Project Documentation",
+  "type": "shopware-platform-plugin",
+  "license": "proprietary",
+  "version": "1.0.0",
+  "require": {
+    "php": ">=8.2",
+    "shopware/core": "~6.6.0",
+    "shopware/administration": "~6.6.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "CraftConvert\\ProjectDocumentation\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Craft Convert",
+      "email": "support@craftconvert.com",
+      "homepage": "https://www.craftconvert.com/",
+      "role": "Developer"
+    }
+  ],
+  "extra": {
+    "shopware-plugin-class": "CraftConvert\\ProjectDocumentation\\CraftConvertProjectDocumentation",
+    "label": {
+      "de-DE": "Craft Convert: Projektdokumentation",
+      "en-GB": "Craft Convert: Project Documentation",
+      "nl-NL": "Craft Convert: Projectdocumentatie",
+      "nl-BE": "Craft Convert: Projectdocumentatie"
+    },
+    "description": {
+      "de-DE": "Zeigt Projektdokumentation direkt im Shopware-Administrationsbereich an.",
+      "en-GB": "Displays project documentation directly in the Shopware administration area.",
+      "nl-NL": "Toont projectdocumentatie rechtstreeks in het Shopware-beheerpaneel.",
+      "nl-BE": "Toont projectdocumentatie rechtstreeks in het Shopware-beheerpaneel."
+    },
+    "manufacturerLink": {
+      "de-DE": "https://www.craftconvert.com/",
+      "en-GB": "https://www.craftconvert.com/",
+      "nl-NL": "https://www.craftconvert.com/",
+      "nl-BE": "https://www.craftconvert.com/"
+    },
+    "supportLink": {
+      "de-DE": "https://www.craftconvert.com/contact/",
+      "en-GB": "https://www.craftconvert.com/contact/",
+      "nl-NL": "https://www.craftconvert.com/contact/",
+      "nl-BE": "https://www.craftconvert.com/contact/"
+    }
+  }
+}
