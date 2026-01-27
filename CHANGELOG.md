@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-01-27
+
 ### Changed
 
 - **Breaking:** Plugin documentation path structure changed from `Resources/docs/{locale}/` to `Resources/docs/{set}/{locale}/` for consistency with external documentation paths
