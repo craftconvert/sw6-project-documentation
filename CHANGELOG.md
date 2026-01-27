@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Breaking:** Plugin documentation path structure changed from `Resources/docs/{locale}/` to `Resources/docs/{set}/{locale}/` for consistency with external documentation paths
+- Plugin-based documentation URLs now include a kebab-case plugin prefix (e.g., `my-plugin/getting-started`) to prevent collisions when multiple plugins use the same filename
 
 ### Removed
 

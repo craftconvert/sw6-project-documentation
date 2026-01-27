@@ -12,6 +12,7 @@ class DocumentationScanner
     private const CACHE_KEY = 'cc_project_documentation_tree';
     private const CACHE_TTL = 3600;
     private const DEFAULT_SET = 'project';
+    private const EXTERNAL_SOURCE_PREFIX = 'external_';
 
     public function __construct(
         private readonly KernelInterface $kernel,
@@ -51,21 +52,52 @@ class DocumentationScanner
     {
         $sources = $this->getDocumentationSources($locale, $set);
 
+        // Check if path starts with a plugin slug
+        $pathParts = explode('/', $path, 2);
+        if (count($pathParts) === 2) {
+            $potentialSlug = $pathParts[0];
+            $remainingPath = $pathParts[1];
+
+            // Find matching plugin source by slug
+            foreach ($sources as $sourceName => $docsPath) {
+                if ($this->isPluginSource($sourceName) && $this->toKebabCase($sourceName) === $potentialSlug) {
+                    $filePath = $docsPath . '/' . $remainingPath . '.md';
+
+                    if (file_exists($filePath)) {
+                        $content = file_get_contents($filePath);
+                        $lastModified = filemtime($filePath);
+
+                        return [
+                            'content' => $content,
+                            'path' => $path,
+                            'pluginName' => $sourceName,
+                            'filePath' => $filePath,
+                            'lastModified' => $lastModified,
+                            'set' => $set,
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Fallback: search external sources without prefix
         foreach ($sources as $sourceName => $docsPath) {
-            $filePath = $docsPath . '/' . $path . '.md';
+            if (!$this->isPluginSource($sourceName)) {
+                $filePath = $docsPath . '/' . $path . '.md';
 
-            if (file_exists($filePath)) {
-                $content = file_get_contents($filePath);
-                $lastModified = filemtime($filePath);
+                if (file_exists($filePath)) {
+                    $content = file_get_contents($filePath);
+                    $lastModified = filemtime($filePath);
 
-                return [
-                    'content' => $content,
-                    'path' => $path,
-                    'pluginName' => $sourceName,
-                    'filePath' => $filePath,
-                    'lastModified' => $lastModified,
-                    'set' => $set,
-                ];
+                    return [
+                        'content' => $content,
+                        'path' => $path,
+                        'pluginName' => $sourceName,
+                        'filePath' => $filePath,
+                        'lastModified' => $lastModified,
+                        'set' => $set,
+                    ];
+                }
             }
         }
 
@@ -107,6 +139,12 @@ class DocumentationScanner
 
                         if ($sidebarSet === $set) {
                             $sidebar['pluginName'] = $sourceName;
+
+                            // Auto-prefix paths for plugin sources
+                            if ($this->isPluginSource($sourceName)) {
+                                $sidebar = $this->prefixSidebarPaths($sidebar, $this->toKebabCase($sourceName));
+                            }
+
                             $trees[] = $sidebar;
                         }
                     }
@@ -220,6 +258,12 @@ class DocumentationScanner
                 );
             } elseif (str_ends_with($file, '.md')) {
                 $path = $prefix . pathinfo($file, PATHINFO_FILENAME);
+
+                // Prefix path with plugin slug for plugin sources
+                if ($this->isPluginSource($sourceName)) {
+                    $path = $this->toKebabCase($sourceName) . '/' . $path;
+                }
+
                 $content = file_get_contents($fullPath);
                 $lastModified = filemtime($fullPath);
 
@@ -237,4 +281,37 @@ class DocumentationScanner
         return $documents;
     }
 
+    private function isPluginSource(string $sourceName): bool
+    {
+        return !str_starts_with($sourceName, self::EXTERNAL_SOURCE_PREFIX);
+    }
+
+    private function toKebabCase(string $string): string
+    {
+        return strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $string));
+    }
+
+    private function prefixSidebarPaths(array $sidebar, string $prefix): array
+    {
+        if (isset($sidebar['items'])) {
+            $sidebar['items'] = $this->prefixItemPaths($sidebar['items'], $prefix);
+        }
+
+        return $sidebar;
+    }
+
+    private function prefixItemPaths(array $items, string $prefix): array
+    {
+        foreach ($items as &$item) {
+            if (isset($item['path'])) {
+                $item['path'] = $prefix . '/' . $item['path'];
+            }
+
+            if (isset($item['children'])) {
+                $item['children'] = $this->prefixItemPaths($item['children'], $prefix);
+            }
+        }
+
+        return $items;
+    }
 }
