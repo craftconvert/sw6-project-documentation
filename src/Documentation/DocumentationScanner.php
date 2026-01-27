@@ -152,8 +152,8 @@ class DocumentationScanner
         // First, add external paths configured for this set
         $sources = array_merge($sources, $this->getExternalPaths($locale, $set));
 
-        // Then, add plugin docs paths (plugins determine their set via _sidebar.json)
-        $sources = array_merge($sources, $this->getPluginsWithDocs($locale));
+        // Then, add plugin docs paths
+        $sources = array_merge($sources, $this->getPluginsWithDocs($locale, $set));
 
         return $sources;
     }
@@ -179,14 +179,14 @@ class DocumentationScanner
         return $paths;
     }
 
-    private function getPluginsWithDocs(string $locale): array
+    private function getPluginsWithDocs(string $locale, string $set): array
     {
         $plugins = [];
         $activePlugins = $this->pluginLoader->getPluginInstances()->getActives();
 
         foreach ($activePlugins as $plugin) {
             $pluginPath = $plugin->getPath();
-            $docsPath = $pluginPath . '/Resources/docs/' . $locale;
+            $docsPath = $pluginPath . '/Resources/docs/' . $set . '/' . $locale;
 
             if (is_dir($docsPath)) {
                 $plugins[$plugin->getName()] = $docsPath;
@@ -237,19 +237,4 @@ class DocumentationScanner
         return $documents;
     }
 
-    public function clearCache(): void
-    {
-        $locales = ['en-GB', 'nl-BE', 'nl-NL'];
-        $sets = array_keys($this->documentationSets);
-
-        if (empty($sets)) {
-            $sets = [self::DEFAULT_SET];
-        }
-
-        foreach ($locales as $locale) {
-            foreach ($sets as $set) {
-                $this->cache->delete(self::CACHE_KEY . '_' . $locale . '_' . $set);
-            }
-        }
-    }
 }
