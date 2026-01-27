@@ -133,7 +133,7 @@ Component.register('cc-project-documentation-index', {
                     if (firstPath) {
                         this.$router.replace({
                             name: 'cc.project.documentation.index',
-                            params: { set: this.currentSet, path: firstPath },
+                            params: { set: this.currentSet, path: firstPath.split('/') },
                         });
                     }
                 }
@@ -259,7 +259,7 @@ Component.register('cc-project-documentation-index', {
         onNavigate(path) {
             this.$router.push({
                 name: 'cc.project.documentation.index',
-                params: { set: this.currentSet, path: path },
+                params: { set: this.currentSet, path: path.split('/') },
             });
             this.searchResults = [];
         },

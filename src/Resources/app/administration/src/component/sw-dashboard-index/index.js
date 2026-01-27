@@ -150,7 +150,7 @@ Component.override('sw-dashboard-index', {
             }
 
             if (this.documentationEntryPath) {
-                params.path = this.documentationEntryPath;
+                params.path = this.documentationEntryPath.split('/');
             }
 
             this.$router.push({
