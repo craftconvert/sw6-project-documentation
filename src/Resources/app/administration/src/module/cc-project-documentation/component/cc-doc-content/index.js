@@ -63,7 +63,10 @@ Component.register('cc-doc-content', {
                 return '';
             }
 
-            return this.parseMarkdown(this.document.content);
+            const locale = this.document.locale || 'en-GB';
+            const set = this.document.set || 'project';
+
+            return this.parseMarkdown(this.document.content, locale, set);
         },
 
         formattedDate() {
@@ -99,11 +102,20 @@ Component.register('cc-doc-content', {
     },
 
     methods: {
-        parseMarkdown(markdown) {
+        parseMarkdown(markdown, locale = 'en-GB', set = 'project') {
             let html = markdown;
 
             // Normalize line endings
             html = html.replace(/\r\n/g, '\n');
+
+            // Parse screenshot tags first (before code blocks to avoid conflicts)
+            html = this.parseScreenshots(html, locale, set);
+
+            // Parse regular images
+            html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+                const imageUrl = this.buildImageUrl(src, locale, set);
+                return `<img src="${imageUrl}" alt="${this.escapeHtml(alt)}" loading="lazy">`;
+            });
 
             // Extract and placeholder code blocks to protect them
             const codeBlocks = [];
@@ -381,6 +393,61 @@ Component.register('cc-doc-content', {
                 '>': '&gt;',
             };
             return text.replace(/[&<>]/g, m => map[m]);
+        },
+
+        parseScreenshots(html, locale, set) {
+            // Match <screenshot ...>![alt](src)</screenshot>
+            // Supports: url="...", scroll (boolean), height="..."
+            const screenshotRegex = /<screenshot([^>]*)>\s*!\[([^\]]*)\]\(([^)]+)\)\s*<\/screenshot>/g;
+
+            return html.replace(screenshotRegex, (match, attrs, alt, src) => {
+                // Parse attributes
+                const urlMatch = attrs.match(/url=["']([^"']+)["']/);
+                const url = urlMatch ? urlMatch[1] : '';
+
+                const hasScroll = /\bscroll\b/.test(attrs);
+
+                const heightMatch = attrs.match(/height=["']([^"']+)["']/);
+                const height = heightMatch ? heightMatch[1] : '300px';
+
+                const imageUrl = this.buildImageUrl(src, locale, set);
+                const scrollClass = hasScroll ? ' cc-screenshot--scroll' : '';
+                const contentStyle = hasScroll ? ` style="height: ${this.escapeHtml(height)}"` : '';
+
+                // Build the lock icon SVG
+                const lockIcon = `<svg class="lock-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>`;
+
+                return `<div class="cc-screenshot${scrollClass}">
+                    <div class="cc-screenshot__titlebar">
+                        <div class="cc-screenshot__controls">
+                            <span class="close"></span>
+                            <span class="minimize"></span>
+                            <span class="maximize"></span>
+                        </div>
+                        <div class="cc-screenshot__urlbar">
+                            ${lockIcon}
+                            <span class="url-text">${this.escapeHtml(url)}</span>
+                        </div>
+                    </div>
+                    <div class="cc-screenshot__content"${contentStyle}>
+                        <img src="${imageUrl}" alt="${this.escapeHtml(alt)}" loading="lazy">
+                    </div>
+                </div>`;
+            });
+        },
+
+        buildImageUrl(src, locale, set) {
+            // If absolute URL (starts with http:// or https://), return as-is
+            if (/^https?:\/\//.test(src)) {
+                return src;
+            }
+
+            // Build API URL for relative paths
+            const encodedPath = src.split('/').map(segment => encodeURIComponent(segment)).join('/');
+            return `/api/_action/cc/project-documentation/image/${encodedPath}?locale=${encodeURIComponent(locale)}&set=${encodeURIComponent(set)}`;
         },
 
         generateSlug(text) {

@@ -48,6 +48,60 @@ class DocumentationScanner
         });
     }
 
+    public function getImagePath(string $locale, string $imagePath, string $set = self::DEFAULT_SET): ?string
+    {
+        $sources = $this->getDocumentationSources($locale, $set);
+
+        // Check if path starts with a plugin slug
+        $pathParts = explode('/', $imagePath, 2);
+        if (count($pathParts) === 2) {
+            $potentialSlug = $pathParts[0];
+            $remainingPath = $pathParts[1];
+
+            // Find matching plugin source by slug
+            foreach ($sources as $sourceName => $docsPath) {
+                if ($this->isPluginSource($sourceName) && $this->toKebabCase($sourceName) === $potentialSlug) {
+                    $filePath = $docsPath . '/' . $remainingPath;
+
+                    if (file_exists($filePath) && $this->isValidImageFile($filePath)) {
+                        return $filePath;
+                    }
+                }
+            }
+        }
+
+        // Fallback: search external sources without prefix
+        foreach ($sources as $sourceName => $docsPath) {
+            if (!$this->isPluginSource($sourceName)) {
+                $filePath = $docsPath . '/' . $imagePath;
+
+                if (file_exists($filePath) && $this->isValidImageFile($filePath)) {
+                    return $filePath;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function isValidImageFile(string $filePath): bool
+    {
+        $allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+
+        if (!in_array($extension, $allowedExtensions, true)) {
+            return false;
+        }
+
+        // Ensure path doesn't escape docs directory (security check)
+        $realPath = realpath($filePath);
+        if ($realPath === false) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function getDocument(string $locale, string $path, string $set = self::DEFAULT_SET): ?array
     {
         $sources = $this->getDocumentationSources($locale, $set);

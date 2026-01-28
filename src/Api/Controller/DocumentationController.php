@@ -8,6 +8,7 @@ use CraftConvert\ProjectDocumentation\Documentation\SearchIndexer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class DocumentationController extends AbstractController
@@ -105,7 +106,49 @@ class DocumentationController extends AbstractController
                 'toc' => $toc,
                 'lastModified' => $document['lastModified'],
                 'set' => $document['set'],
+                'locale' => $locale,
             ],
+        ]);
+    }
+
+    #[Route(
+        path: '/api/_action/cc/project-documentation/image/{path}',
+        name: 'api.action.cc.project_documentation.image',
+        defaults: ['_routeScope' => ['api'], '_acl' => ['cc_project_documentation:read']],
+        methods: ['GET'],
+        requirements: ['path' => '.+']
+    )]
+    public function getImage(Request $request, string $path): Response
+    {
+        $locale = $request->query->getString('locale', 'en-GB');
+        $set = $request->query->getString('set', self::DEFAULT_SET);
+
+        $imagePath = $this->scanner->getImagePath($locale, $path, $set);
+
+        if ($imagePath === null) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Image not found',
+            ], 404);
+        }
+
+        $content = file_get_contents($imagePath);
+        $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+
+        $mimeTypes = [
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'svg' => 'image/svg+xml',
+        ];
+
+        $contentType = $mimeTypes[$extension] ?? 'application/octet-stream';
+
+        return new Response($content, 200, [
+            'Content-Type' => $contentType,
+            'Cache-Control' => 'public, max-age=3600',
         ]);
     }
 
