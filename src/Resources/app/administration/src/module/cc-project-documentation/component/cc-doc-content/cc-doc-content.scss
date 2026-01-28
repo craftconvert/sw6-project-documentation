@@ -589,19 +589,33 @@
                 }
             }
 
-            // Content area
+            // Content area - default (no aspect-ratio, no scroll)
             &__content {
-                overflow: hidden;
+                position: relative;
+                width: 100%;
 
                 img {
                     display: block;
                     width: 100%;
-                    height: 100%;
+                    height: auto;
                     margin: 0;
                     border-radius: 0;
                     box-shadow: none;
-                    object-fit: cover;
-                    object-position: top;
+                }
+
+                // When aspect-ratio is set via inline style
+                &[style*="aspect-ratio"] {
+                    overflow: hidden;
+
+                    img {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        object-position: top;
+                    }
                 }
             }
 
@@ -630,8 +644,10 @@
                     }
 
                     img {
+                        position: static;
                         width: 100%;
                         height: auto;
+                        object-fit: initial;
                     }
                 }
             }
