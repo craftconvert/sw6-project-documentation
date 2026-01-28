@@ -138,32 +138,32 @@ Component.register('cc-doc-content', {
             });
 
             // Tables - parse before other elements
-            html = this.parseTables(html);
+            html = this.parseTables(html, locale, set);
 
             // Headers with IDs for TOC anchoring
             html = html.replace(/^######\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h6 id="${id}">${this.parseInline(text)}</h6>`;
+                return `<h6 id="${id}">${this.parseInline(text, locale, set)}</h6>`;
             });
             html = html.replace(/^#####\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h5 id="${id}">${this.parseInline(text)}</h5>`;
+                return `<h5 id="${id}">${this.parseInline(text, locale, set)}</h5>`;
             });
             html = html.replace(/^####\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h4 id="${id}">${this.parseInline(text)}</h4>`;
+                return `<h4 id="${id}">${this.parseInline(text, locale, set)}</h4>`;
             });
             html = html.replace(/^###\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h3 id="${id}">${this.parseInline(text)}</h3>`;
+                return `<h3 id="${id}">${this.parseInline(text, locale, set)}</h3>`;
             });
             html = html.replace(/^##\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h2 id="${id}">${this.parseInline(text)}</h2>`;
+                return `<h2 id="${id}">${this.parseInline(text, locale, set)}</h2>`;
             });
             html = html.replace(/^#\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h1 id="${id}">${this.parseInline(text)}</h1>`;
+                return `<h1 id="${id}">${this.parseInline(text, locale, set)}</h1>`;
             });
 
             // Horizontal rule (before lists to avoid conflicts)
@@ -176,11 +176,11 @@ Component.register('cc-doc-content', {
                     .filter(line => line.trim())
                     .map(line => line.replace(/^>\s+/, ''))
                     .join('<br>');
-                return `<blockquote>${this.parseInline(content)}</blockquote>\n`;
+                return `<blockquote>${this.parseInline(content, locale, set)}</blockquote>\n`;
             });
 
             // Lists - proper handling
-            html = this.parseLists(html);
+            html = this.parseLists(html, locale, set);
 
             // Paragraphs - wrap remaining text lines
             const lines = html.split('\n');
@@ -194,7 +194,7 @@ Component.register('cc-doc-content', {
                 // Skip empty lines
                 if (!trimmed) {
                     if (inParagraph && paragraphContent.length > 0) {
-                        result.push(`<p>${this.parseInline(paragraphContent.join(' '))}</p>`);
+                        result.push(`<p>${this.parseInline(paragraphContent.join(' '), locale, set)}</p>`);
                         paragraphContent = [];
                         inParagraph = false;
                     }
@@ -205,7 +205,7 @@ Component.register('cc-doc-content', {
                 if (/^<(h[1-6]|ul|ol|li|blockquote|hr|table|div|pre|p|%%CODEBLOCK)/.test(trimmed) ||
                     /^%%CODEBLOCK/.test(trimmed)) {
                     if (inParagraph && paragraphContent.length > 0) {
-                        result.push(`<p>${this.parseInline(paragraphContent.join(' '))}</p>`);
+                        result.push(`<p>${this.parseInline(paragraphContent.join(' '), locale, set)}</p>`);
                         paragraphContent = [];
                         inParagraph = false;
                     }
@@ -218,7 +218,7 @@ Component.register('cc-doc-content', {
 
             // Close any remaining paragraph
             if (paragraphContent.length > 0) {
-                result.push(`<p>${this.parseInline(paragraphContent.join(' '))}</p>`);
+                result.push(`<p>${this.parseInline(paragraphContent.join(' '), locale, set)}</p>`);
             }
 
             html = result.join('\n');
@@ -241,7 +241,7 @@ Component.register('cc-doc-content', {
             return html;
         },
 
-        parseInline(text) {
+        parseInline(text, locale, set) {
             let result = text;
 
             // Bold and italic (order matters)
@@ -249,13 +249,19 @@ Component.register('cc-doc-content', {
             result = result.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
             result = result.replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
+            // Images (must be before links to prevent ![alt](src) matching as link)
+            result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+                const imageUrl = this.buildImageUrl(src, locale, set);
+                return `<img src="${imageUrl}" alt="${this.escapeHtml(alt)}" loading="lazy">`;
+            });
+
             // Links
             result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="doc-link" target="_blank" rel="noopener">$1</a>');
 
             return result;
         },
 
-        parseTables(markdown) {
+        parseTables(markdown, locale, set) {
             const lines = markdown.split('\n');
             const result = [];
             let inTable = false;
@@ -282,7 +288,7 @@ Component.register('cc-doc-content', {
                     tableRows.push(line);
                 } else {
                     if (inTable && tableRows.length > 0) {
-                        result.push(this.buildTable(tableRows, hasHeader));
+                        result.push(this.buildTable(tableRows, hasHeader, locale, set));
                         tableRows = [];
                         inTable = false;
                         hasHeader = false;
@@ -293,13 +299,13 @@ Component.register('cc-doc-content', {
 
             // Handle table at end of content
             if (inTable && tableRows.length > 0) {
-                result.push(this.buildTable(tableRows, hasHeader));
+                result.push(this.buildTable(tableRows, hasHeader, locale, set));
             }
 
             return result.join('\n');
         },
 
-        buildTable(rows, hasHeader) {
+        buildTable(rows, hasHeader, locale, set) {
             if (rows.length === 0) return '';
 
             let html = '<div class="table-wrapper"><table>';
@@ -313,14 +319,14 @@ Component.register('cc-doc-content', {
                 if (index === 0 && hasHeader) {
                     html += '<thead><tr>';
                     cells.forEach(cell => {
-                        html += `<th>${this.parseInline(cell)}</th>`;
+                        html += `<th>${this.parseInline(cell, locale, set)}</th>`;
                     });
                     html += '</tr></thead><tbody>';
                 } else {
                     if (index === 0) html += '<tbody>';
                     html += '<tr>';
                     cells.forEach(cell => {
-                        html += `<td>${this.parseInline(cell)}</td>`;
+                        html += `<td>${this.parseInline(cell, locale, set)}</td>`;
                     });
                     html += '</tr>';
                 }
@@ -330,7 +336,7 @@ Component.register('cc-doc-content', {
             return html;
         },
 
-        parseLists(markdown) {
+        parseLists(markdown, locale, set) {
             const lines = markdown.split('\n');
             const result = [];
             let listStack = []; // Stack of { type: 'ul'|'ol', indent: number }
@@ -355,16 +361,16 @@ Component.register('cc-doc-content', {
                     // Check if we need to start a new list or continue
                     if (listStack.length === 0 || listStack[listStack.length - 1].indent < indent) {
                         // Start a new nested list
-                        result.push(`<${listType}><li>${this.parseInline(content)}`);
+                        result.push(`<${listType}><li>${this.parseInline(content, locale, set)}`);
                         listStack.push({ type: listType, indent });
                     } else if (listStack[listStack.length - 1].type === listType) {
                         // Continue same list type
-                        result.push(`</li><li>${this.parseInline(content)}`);
+                        result.push(`</li><li>${this.parseInline(content, locale, set)}`);
                     } else {
                         // Different list type at same level - close old, start new
                         const closed = listStack.pop();
                         result.push(`</li></${closed.type}>`);
-                        result.push(`<${listType}><li>${this.parseInline(content)}`);
+                        result.push(`<${listType}><li>${this.parseInline(content, locale, set)}`);
                         listStack.push({ type: listType, indent });
                     }
                 } else {
