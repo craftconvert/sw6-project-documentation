@@ -418,7 +418,7 @@ Component.register('cc-doc-content', {
 
         parseScreenshots(html, locale, set, pluginName = '') {
             // Match <screenshot ...>![alt](src)</screenshot>
-            // Supports: url="...", scroll (boolean), height="..."
+            // Supports: url="...", scroll (boolean), height="...", ratio="..."
             const screenshotRegex = /<screenshot([^>]*)>\s*!\[([^\]]*)\]\(([^)]+)\)\s*<\/screenshot>/g;
 
             return html.replace(screenshotRegex, (match, attrs, alt, src) => {
@@ -431,9 +431,21 @@ Component.register('cc-doc-content', {
                 const heightMatch = attrs.match(/height=["']([^"']+)["']/);
                 const height = heightMatch ? heightMatch[1] : '300px';
 
+                const ratioMatch = attrs.match(/ratio=["']([^"']+)["']/);
+                const ratio = ratioMatch ? ratioMatch[1] : '';
+
                 const imageTag = this.buildImageTag(src, alt, locale, set, pluginName);
                 const scrollClass = hasScroll ? ' cc-screenshot--scroll' : '';
-                const contentStyle = hasScroll ? ` style="height: ${this.escapeHtml(height)}"` : '';
+
+                // Build content style based on scroll and/or ratio
+                const styles = [];
+                if (hasScroll) {
+                    styles.push(`height: ${this.escapeHtml(height)}`);
+                }
+                if (ratio) {
+                    styles.push(`aspect-ratio: ${this.escapeHtml(ratio)}`);
+                }
+                const contentStyle = styles.length > 0 ? ` style="${styles.join('; ')}"` : '';
 
                 // Build the lock icon SVG (single line to avoid paragraph wrapping)
                 const lockIcon = '<svg class="lock-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
