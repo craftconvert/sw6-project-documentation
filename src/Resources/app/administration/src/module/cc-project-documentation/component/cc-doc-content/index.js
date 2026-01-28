@@ -495,9 +495,9 @@ Component.register('cc-doc-content', {
                     return;
                 }
 
-                // Build API path
+                // Build API path (without /api prefix - httpClient adds it)
                 const encodedPath = src.split('/').map(segment => encodeURIComponent(segment)).join('/');
-                const apiUrl = `/api/_action/cc/project-documentation/image/${encodedPath}`;
+                const apiUrl = `/_action/cc/project-documentation/image/${encodedPath}`;
 
                 // Fetch image via httpClient
                 this.httpClient.get(apiUrl, {
