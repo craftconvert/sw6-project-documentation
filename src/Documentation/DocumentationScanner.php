@@ -55,10 +55,16 @@ class DocumentationScanner
         // If plugin context is provided, try that plugin first
         if ($pluginContext !== '' && $this->isPluginSource($pluginContext)) {
             if (isset($sources[$pluginContext])) {
+                // Try locale-specific path first
                 $filePath = $sources[$pluginContext] . '/' . $imagePath;
-
                 if (file_exists($filePath) && $this->isValidImageFile($filePath)) {
                     return $filePath;
+                }
+
+                // Try language-independent path (parent of locale folder)
+                $languageIndependentPath = dirname($sources[$pluginContext]) . '/' . $imagePath;
+                if (file_exists($languageIndependentPath) && $this->isValidImageFile($languageIndependentPath)) {
+                    return $languageIndependentPath;
                 }
             }
         }
@@ -72,10 +78,16 @@ class DocumentationScanner
             // Find matching plugin source by slug
             foreach ($sources as $sourceName => $docsPath) {
                 if ($this->isPluginSource($sourceName) && $this->toKebabCase($sourceName) === $potentialSlug) {
+                    // Try locale-specific path first
                     $filePath = $docsPath . '/' . $remainingPath;
-
                     if (file_exists($filePath) && $this->isValidImageFile($filePath)) {
                         return $filePath;
+                    }
+
+                    // Try language-independent path
+                    $languageIndependentPath = dirname($docsPath) . '/' . $remainingPath;
+                    if (file_exists($languageIndependentPath) && $this->isValidImageFile($languageIndependentPath)) {
+                        return $languageIndependentPath;
                     }
                 }
             }
@@ -84,10 +96,16 @@ class DocumentationScanner
         // Fallback: search external sources without prefix
         foreach ($sources as $sourceName => $docsPath) {
             if (!$this->isPluginSource($sourceName)) {
+                // Try locale-specific path first
                 $filePath = $docsPath . '/' . $imagePath;
-
                 if (file_exists($filePath) && $this->isValidImageFile($filePath)) {
                     return $filePath;
+                }
+
+                // Try language-independent path
+                $languageIndependentPath = dirname($docsPath) . '/' . $imagePath;
+                if (file_exists($languageIndependentPath) && $this->isValidImageFile($languageIndependentPath)) {
+                    return $languageIndependentPath;
                 }
             }
         }
