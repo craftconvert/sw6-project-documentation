@@ -122,8 +122,9 @@ class DocumentationController extends AbstractController
     {
         $locale = $request->query->getString('locale', 'en-GB');
         $set = $request->query->getString('set', self::DEFAULT_SET);
+        $plugin = $request->query->getString('plugin', '');
 
-        $imagePath = $this->scanner->getImagePath($locale, $path, $set);
+        $imagePath = $this->scanner->getImagePath($locale, $path, $set, $plugin);
 
         if ($imagePath === null) {
             return new JsonResponse([

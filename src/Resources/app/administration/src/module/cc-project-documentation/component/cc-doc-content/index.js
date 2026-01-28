@@ -77,8 +77,9 @@ Component.register('cc-doc-content', {
 
             const locale = this.document.locale || 'en-GB';
             const set = this.document.set || 'project';
+            const pluginName = this.document.pluginName || '';
 
-            return this.parseMarkdown(this.document.content, locale, set);
+            return this.parseMarkdown(this.document.content, locale, set, pluginName);
         },
 
         formattedDate() {
@@ -118,18 +119,18 @@ Component.register('cc-doc-content', {
     },
 
     methods: {
-        parseMarkdown(markdown, locale = 'en-GB', set = 'project') {
+        parseMarkdown(markdown, locale = 'en-GB', set = 'project', pluginName = '') {
             let html = markdown;
 
             // Normalize line endings
             html = html.replace(/\r\n/g, '\n');
 
             // Parse screenshot tags first (before code blocks to avoid conflicts)
-            html = this.parseScreenshots(html, locale, set);
+            html = this.parseScreenshots(html, locale, set, pluginName);
 
             // Parse regular images
             html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
-                return this.buildImageTag(src, alt, locale, set);
+                return this.buildImageTag(src, alt, locale, set, pluginName);
             });
 
             // Extract and placeholder code blocks to protect them
@@ -153,32 +154,32 @@ Component.register('cc-doc-content', {
             });
 
             // Tables - parse before other elements
-            html = this.parseTables(html, locale, set);
+            html = this.parseTables(html, locale, set, pluginName);
 
             // Headers with IDs for TOC anchoring
             html = html.replace(/^######\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h6 id="${id}">${this.parseInline(text, locale, set)}</h6>`;
+                return `<h6 id="${id}">${this.parseInline(text, locale, set, pluginName)}</h6>`;
             });
             html = html.replace(/^#####\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h5 id="${id}">${this.parseInline(text, locale, set)}</h5>`;
+                return `<h5 id="${id}">${this.parseInline(text, locale, set, pluginName)}</h5>`;
             });
             html = html.replace(/^####\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h4 id="${id}">${this.parseInline(text, locale, set)}</h4>`;
+                return `<h4 id="${id}">${this.parseInline(text, locale, set, pluginName)}</h4>`;
             });
             html = html.replace(/^###\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h3 id="${id}">${this.parseInline(text, locale, set)}</h3>`;
+                return `<h3 id="${id}">${this.parseInline(text, locale, set, pluginName)}</h3>`;
             });
             html = html.replace(/^##\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h2 id="${id}">${this.parseInline(text, locale, set)}</h2>`;
+                return `<h2 id="${id}">${this.parseInline(text, locale, set, pluginName)}</h2>`;
             });
             html = html.replace(/^#\s+(.+)$/gm, (match, text) => {
                 const id = this.generateSlug(text);
-                return `<h1 id="${id}">${this.parseInline(text, locale, set)}</h1>`;
+                return `<h1 id="${id}">${this.parseInline(text, locale, set, pluginName)}</h1>`;
             });
 
             // Horizontal rule (before lists to avoid conflicts)
@@ -191,11 +192,11 @@ Component.register('cc-doc-content', {
                     .filter(line => line.trim())
                     .map(line => line.replace(/^>\s+/, ''))
                     .join('<br>');
-                return `<blockquote>${this.parseInline(content, locale, set)}</blockquote>\n`;
+                return `<blockquote>${this.parseInline(content, locale, set, pluginName)}</blockquote>\n`;
             });
 
             // Lists - proper handling
-            html = this.parseLists(html, locale, set);
+            html = this.parseLists(html, locale, set, pluginName);
 
             // Paragraphs - wrap remaining text lines
             const lines = html.split('\n');
@@ -209,7 +210,7 @@ Component.register('cc-doc-content', {
                 // Skip empty lines
                 if (!trimmed) {
                     if (inParagraph && paragraphContent.length > 0) {
-                        result.push(`<p>${this.parseInline(paragraphContent.join(' '), locale, set)}</p>`);
+                        result.push(`<p>${this.parseInline(paragraphContent.join(' '), locale, set, pluginName)}</p>`);
                         paragraphContent = [];
                         inParagraph = false;
                     }
@@ -220,7 +221,7 @@ Component.register('cc-doc-content', {
                 if (/^<(h[1-6]|ul|ol|li|blockquote|hr|table|div|pre|p|%%CODEBLOCK)/.test(trimmed) ||
                     /^%%CODEBLOCK/.test(trimmed)) {
                     if (inParagraph && paragraphContent.length > 0) {
-                        result.push(`<p>${this.parseInline(paragraphContent.join(' '), locale, set)}</p>`);
+                        result.push(`<p>${this.parseInline(paragraphContent.join(' '), locale, set, pluginName)}</p>`);
                         paragraphContent = [];
                         inParagraph = false;
                     }
@@ -233,7 +234,7 @@ Component.register('cc-doc-content', {
 
             // Close any remaining paragraph
             if (paragraphContent.length > 0) {
-                result.push(`<p>${this.parseInline(paragraphContent.join(' '), locale, set)}</p>`);
+                result.push(`<p>${this.parseInline(paragraphContent.join(' '), locale, set, pluginName)}</p>`);
             }
 
             html = result.join('\n');
@@ -256,7 +257,7 @@ Component.register('cc-doc-content', {
             return html;
         },
 
-        parseInline(text, locale, set) {
+        parseInline(text, locale, set, pluginName = '') {
             let result = text;
 
             // Bold and italic (order matters)
@@ -266,7 +267,7 @@ Component.register('cc-doc-content', {
 
             // Images (must be before links to prevent ![alt](src) matching as link)
             result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
-                return this.buildImageTag(src, alt, locale, set);
+                return this.buildImageTag(src, alt, locale, set, pluginName);
             });
 
             // Links
@@ -275,7 +276,7 @@ Component.register('cc-doc-content', {
             return result;
         },
 
-        parseTables(markdown, locale, set) {
+        parseTables(markdown, locale, set, pluginName = '') {
             const lines = markdown.split('\n');
             const result = [];
             let inTable = false;
@@ -302,7 +303,7 @@ Component.register('cc-doc-content', {
                     tableRows.push(line);
                 } else {
                     if (inTable && tableRows.length > 0) {
-                        result.push(this.buildTable(tableRows, hasHeader, locale, set));
+                        result.push(this.buildTable(tableRows, hasHeader, locale, set, pluginName));
                         tableRows = [];
                         inTable = false;
                         hasHeader = false;
@@ -313,13 +314,13 @@ Component.register('cc-doc-content', {
 
             // Handle table at end of content
             if (inTable && tableRows.length > 0) {
-                result.push(this.buildTable(tableRows, hasHeader, locale, set));
+                result.push(this.buildTable(tableRows, hasHeader, locale, set, pluginName));
             }
 
             return result.join('\n');
         },
 
-        buildTable(rows, hasHeader, locale, set) {
+        buildTable(rows, hasHeader, locale, set, pluginName = '') {
             if (rows.length === 0) return '';
 
             let html = '<div class="table-wrapper"><table>';
@@ -333,14 +334,14 @@ Component.register('cc-doc-content', {
                 if (index === 0 && hasHeader) {
                     html += '<thead><tr>';
                     cells.forEach(cell => {
-                        html += `<th>${this.parseInline(cell, locale, set)}</th>`;
+                        html += `<th>${this.parseInline(cell, locale, set, pluginName)}</th>`;
                     });
                     html += '</tr></thead><tbody>';
                 } else {
                     if (index === 0) html += '<tbody>';
                     html += '<tr>';
                     cells.forEach(cell => {
-                        html += `<td>${this.parseInline(cell, locale, set)}</td>`;
+                        html += `<td>${this.parseInline(cell, locale, set, pluginName)}</td>`;
                     });
                     html += '</tr>';
                 }
@@ -350,7 +351,7 @@ Component.register('cc-doc-content', {
             return html;
         },
 
-        parseLists(markdown, locale, set) {
+        parseLists(markdown, locale, set, pluginName = '') {
             const lines = markdown.split('\n');
             const result = [];
             let listStack = []; // Stack of { type: 'ul'|'ol', indent: number }
@@ -375,16 +376,16 @@ Component.register('cc-doc-content', {
                     // Check if we need to start a new list or continue
                     if (listStack.length === 0 || listStack[listStack.length - 1].indent < indent) {
                         // Start a new nested list
-                        result.push(`<${listType}><li>${this.parseInline(content, locale, set)}`);
+                        result.push(`<${listType}><li>${this.parseInline(content, locale, set, pluginName)}`);
                         listStack.push({ type: listType, indent });
                     } else if (listStack[listStack.length - 1].type === listType) {
                         // Continue same list type
-                        result.push(`</li><li>${this.parseInline(content, locale, set)}`);
+                        result.push(`</li><li>${this.parseInline(content, locale, set, pluginName)}`);
                     } else {
                         // Different list type at same level - close old, start new
                         const closed = listStack.pop();
                         result.push(`</li></${closed.type}>`);
-                        result.push(`<${listType}><li>${this.parseInline(content, locale, set)}`);
+                        result.push(`<${listType}><li>${this.parseInline(content, locale, set, pluginName)}`);
                         listStack.push({ type: listType, indent });
                     }
                 } else {
@@ -415,7 +416,7 @@ Component.register('cc-doc-content', {
             return text.replace(/[&<>]/g, m => map[m]);
         },
 
-        parseScreenshots(html, locale, set) {
+        parseScreenshots(html, locale, set, pluginName = '') {
             // Match <screenshot ...>![alt](src)</screenshot>
             // Supports: url="...", scroll (boolean), height="..."
             const screenshotRegex = /<screenshot([^>]*)>\s*!\[([^\]]*)\]\(([^)]+)\)\s*<\/screenshot>/g;
@@ -430,7 +431,7 @@ Component.register('cc-doc-content', {
                 const heightMatch = attrs.match(/height=["']([^"']+)["']/);
                 const height = heightMatch ? heightMatch[1] : '300px';
 
-                const imageTag = this.buildImageTag(src, alt, locale, set);
+                const imageTag = this.buildImageTag(src, alt, locale, set, pluginName);
                 const scrollClass = hasScroll ? ' cc-screenshot--scroll' : '';
                 const contentStyle = hasScroll ? ` style="height: ${this.escapeHtml(height)}"` : '';
 
@@ -442,7 +443,7 @@ Component.register('cc-doc-content', {
             });
         },
 
-        buildImageTag(src, alt, locale, set) {
+        buildImageTag(src, alt, locale, set, pluginName = '') {
             const escapedAlt = this.escapeHtml(alt);
 
             // If absolute URL (starts with http:// or https://), use directly
@@ -451,7 +452,7 @@ Component.register('cc-doc-content', {
             }
 
             // For relative paths, use data attributes for async loading via httpClient
-            return `<img data-doc-src="${this.escapeHtml(src)}" data-doc-locale="${this.escapeHtml(locale)}" data-doc-set="${this.escapeHtml(set)}" alt="${escapedAlt}" loading="lazy" class="cc-doc-image-loading">`;
+            return `<img data-doc-src="${this.escapeHtml(src)}" data-doc-locale="${this.escapeHtml(locale)}" data-doc-set="${this.escapeHtml(set)}" data-doc-plugin="${this.escapeHtml(pluginName)}" alt="${escapedAlt}" loading="lazy" class="cc-doc-image-loading">`;
         },
 
         generateSlug(text) {
@@ -487,6 +488,7 @@ Component.register('cc-doc-content', {
                 const src = img.getAttribute('data-doc-src');
                 const locale = img.getAttribute('data-doc-locale');
                 const set = img.getAttribute('data-doc-set');
+                const plugin = img.getAttribute('data-doc-plugin');
 
                 if (!src) return;
 
@@ -507,7 +509,7 @@ Component.register('cc-doc-content', {
 
                 // Fetch image via httpClient
                 this.httpClient.get(apiUrl, {
-                    params: { locale, set },
+                    params: { locale, set, plugin },
                     responseType: 'blob',
                     headers,
                 }).then((response) => {
@@ -519,6 +521,7 @@ Component.register('cc-doc-content', {
                     img.removeAttribute('data-doc-src');
                     img.removeAttribute('data-doc-locale');
                     img.removeAttribute('data-doc-set');
+                    img.removeAttribute('data-doc-plugin');
                 }).catch((error) => {
                     console.error('Failed to load documentation image:', src, error);
                     img.classList.remove('cc-doc-image-loading');

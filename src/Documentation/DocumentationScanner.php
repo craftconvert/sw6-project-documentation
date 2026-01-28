@@ -48,9 +48,20 @@ class DocumentationScanner
         });
     }
 
-    public function getImagePath(string $locale, string $imagePath, string $set = self::DEFAULT_SET): ?string
+    public function getImagePath(string $locale, string $imagePath, string $set = self::DEFAULT_SET, string $pluginContext = ''): ?string
     {
         $sources = $this->getDocumentationSources($locale, $set);
+
+        // If plugin context is provided, try that plugin first
+        if ($pluginContext !== '' && $this->isPluginSource($pluginContext)) {
+            if (isset($sources[$pluginContext])) {
+                $filePath = $sources[$pluginContext] . '/' . $imagePath;
+
+                if (file_exists($filePath) && $this->isValidImageFile($filePath)) {
+                    return $filePath;
+                }
+            }
+        }
 
         // Check if path starts with a plugin slug
         $pathParts = explode('/', $imagePath, 2);
