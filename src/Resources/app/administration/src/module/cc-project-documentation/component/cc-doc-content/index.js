@@ -499,10 +499,17 @@ Component.register('cc-doc-content', {
                 const encodedPath = src.split('/').map(segment => encodeURIComponent(segment)).join('/');
                 const apiUrl = `/_action/cc/project-documentation/image/${encodedPath}`;
 
+                // Get auth token from loginService
+                const loginService = Shopware.Service('loginService');
+                const headers = {
+                    Authorization: `Bearer ${loginService.getToken()}`,
+                };
+
                 // Fetch image via httpClient
                 this.httpClient.get(apiUrl, {
                     params: { locale, set },
                     responseType: 'blob',
+                    headers,
                 }).then((response) => {
                     const blob = new Blob([response.data], { type: response.headers['content-type'] });
                     const objectUrl = URL.createObjectURL(blob);
