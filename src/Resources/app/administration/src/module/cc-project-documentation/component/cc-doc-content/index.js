@@ -44,6 +44,8 @@ const loadHighlightJs = () => {
 Component.register('cc-doc-content', {
     template,
 
+    inject: ['repositoryFactory'],
+
     props: {
         document: {
             type: Object,
@@ -57,7 +59,17 @@ Component.register('cc-doc-content', {
         },
     },
 
+    data() {
+        return {
+            loadedImages: new Map(),
+        };
+    },
+
     computed: {
+        httpClient() {
+            return Shopware.Application.getContainer('init').httpClient;
+        },
+
         renderedContent() {
             if (!this.document || !this.document.content) {
                 return '';
@@ -91,6 +103,7 @@ Component.register('cc-doc-content', {
         renderedContent() {
             this.$nextTick(() => {
                 this.highlightCode();
+                this.loadDocumentImages();
             });
         },
     },
@@ -98,6 +111,9 @@ Component.register('cc-doc-content', {
     mounted() {
         loadHighlightJs().then(() => {
             this.highlightCode();
+        });
+        this.$nextTick(() => {
+            this.loadDocumentImages();
         });
     },
 
@@ -113,8 +129,7 @@ Component.register('cc-doc-content', {
 
             // Parse regular images
             html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
-                const imageUrl = this.buildImageUrl(src, locale, set);
-                return `<img src="${imageUrl}" alt="${this.escapeHtml(alt)}" loading="lazy">`;
+                return this.buildImageTag(src, alt, locale, set);
             });
 
             // Extract and placeholder code blocks to protect them
@@ -251,8 +266,7 @@ Component.register('cc-doc-content', {
 
             // Images (must be before links to prevent ![alt](src) matching as link)
             result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
-                const imageUrl = this.buildImageUrl(src, locale, set);
-                return `<img src="${imageUrl}" alt="${this.escapeHtml(alt)}" loading="lazy">`;
+                return this.buildImageTag(src, alt, locale, set);
             });
 
             // Links
@@ -416,44 +430,28 @@ Component.register('cc-doc-content', {
                 const heightMatch = attrs.match(/height=["']([^"']+)["']/);
                 const height = heightMatch ? heightMatch[1] : '300px';
 
-                const imageUrl = this.buildImageUrl(src, locale, set);
+                const imageTag = this.buildImageTag(src, alt, locale, set);
                 const scrollClass = hasScroll ? ' cc-screenshot--scroll' : '';
                 const contentStyle = hasScroll ? ` style="height: ${this.escapeHtml(height)}"` : '';
 
-                // Build the lock icon SVG
-                const lockIcon = `<svg class="lock-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>`;
+                // Build the lock icon SVG (single line to avoid paragraph wrapping)
+                const lockIcon = '<svg class="lock-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
 
-                return `<div class="cc-screenshot${scrollClass}">
-                    <div class="cc-screenshot__titlebar">
-                        <div class="cc-screenshot__controls">
-                            <span class="close"></span>
-                            <span class="minimize"></span>
-                            <span class="maximize"></span>
-                        </div>
-                        <div class="cc-screenshot__urlbar">
-                            ${lockIcon}
-                            <span class="url-text">${this.escapeHtml(url)}</span>
-                        </div>
-                    </div>
-                    <div class="cc-screenshot__content"${contentStyle}>
-                        <img src="${imageUrl}" alt="${this.escapeHtml(alt)}" loading="lazy">
-                    </div>
-                </div>`;
+                // Return as single line to prevent markdown parser from adding <p> tags
+                return `<div class="cc-screenshot${scrollClass}"><div class="cc-screenshot__titlebar"><div class="cc-screenshot__controls"><span class="close"></span><span class="minimize"></span><span class="maximize"></span></div><div class="cc-screenshot__urlbar">${lockIcon}<span class="url-text">${this.escapeHtml(url)}</span></div></div><div class="cc-screenshot__content"${contentStyle}>${imageTag}</div></div>`;
             });
         },
 
-        buildImageUrl(src, locale, set) {
-            // If absolute URL (starts with http:// or https://), return as-is
+        buildImageTag(src, alt, locale, set) {
+            const escapedAlt = this.escapeHtml(alt);
+
+            // If absolute URL (starts with http:// or https://), use directly
             if (/^https?:\/\//.test(src)) {
-                return src;
+                return `<img src="${src}" alt="${escapedAlt}" loading="lazy">`;
             }
 
-            // Build API URL for relative paths
-            const encodedPath = src.split('/').map(segment => encodeURIComponent(segment)).join('/');
-            return `/api/_action/cc/project-documentation/image/${encodedPath}?locale=${encodeURIComponent(locale)}&set=${encodeURIComponent(set)}`;
+            // For relative paths, use data attributes for async loading via httpClient
+            return `<img data-doc-src="${this.escapeHtml(src)}" data-doc-locale="${this.escapeHtml(locale)}" data-doc-set="${this.escapeHtml(set)}" alt="${escapedAlt}" loading="lazy" class="cc-doc-image-loading">`;
         },
 
         generateSlug(text) {
@@ -476,6 +474,48 @@ Component.register('cc-doc-content', {
                             }
                         });
                     }
+                });
+            });
+        },
+
+        loadDocumentImages() {
+            if (!this.$el) return;
+
+            const images = this.$el.querySelectorAll('img[data-doc-src]');
+
+            images.forEach((img) => {
+                const src = img.getAttribute('data-doc-src');
+                const locale = img.getAttribute('data-doc-locale');
+                const set = img.getAttribute('data-doc-set');
+
+                if (!src) return;
+
+                // Check if already loaded
+                if (img.src && !img.classList.contains('cc-doc-image-loading')) {
+                    return;
+                }
+
+                // Build API path
+                const encodedPath = src.split('/').map(segment => encodeURIComponent(segment)).join('/');
+                const apiUrl = `/api/_action/cc/project-documentation/image/${encodedPath}`;
+
+                // Fetch image via httpClient
+                this.httpClient.get(apiUrl, {
+                    params: { locale, set },
+                    responseType: 'blob',
+                }).then((response) => {
+                    const blob = new Blob([response.data], { type: response.headers['content-type'] });
+                    const objectUrl = URL.createObjectURL(blob);
+
+                    img.src = objectUrl;
+                    img.classList.remove('cc-doc-image-loading');
+                    img.removeAttribute('data-doc-src');
+                    img.removeAttribute('data-doc-locale');
+                    img.removeAttribute('data-doc-set');
+                }).catch((error) => {
+                    console.error('Failed to load documentation image:', src, error);
+                    img.classList.remove('cc-doc-image-loading');
+                    img.classList.add('cc-doc-image-error');
                 });
             });
         },
