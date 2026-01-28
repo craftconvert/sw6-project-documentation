@@ -175,6 +175,72 @@ $example = true;
 > Blockquote
 ```
 
+### Images
+
+Basic images use standard Markdown syntax:
+
+```markdown
+![Alt text](images/example.png)
+```
+
+#### Image Storage
+
+Images can be stored in two locations:
+
+1. **Locale-specific** (checked first):
+   ```
+   Resources/docs/{set}/{locale}/images/screenshot.png
+   ```
+
+2. **Language-independent** (fallback):
+   ```
+   Resources/docs/{set}/images/screenshot.png
+   ```
+
+Use the language-independent folder to avoid duplicating images across locales.
+
+### Screenshots with Browser Frame
+
+Wrap images in a `<screenshot>` tag to display them in a browser-style frame with traffic lights and URL bar:
+
+```markdown
+<screenshot url="https://your-shop.com/checkout">
+![Checkout page](images/checkout.png)
+</screenshot>
+```
+
+#### Screenshot Attributes
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `url` | URL displayed in the browser bar | `url="https://example.com"` |
+| `scroll` | Enable scrolling for tall screenshots | `scroll` |
+| `height` | Container height when scrolling (default: 300px) | `height="400px"` |
+| `ratio` | Aspect ratio for responsive sizing | `ratio="16/9"` |
+
+#### Examples
+
+**Static screenshot:**
+```markdown
+<screenshot url="https://shop.com/admin/orders">
+![Order list](images/order-list.png)
+</screenshot>
+```
+
+**Scrollable screenshot:**
+```markdown
+<screenshot url="https://shop.com/checkout" scroll height="400px">
+![Full checkout page](images/checkout-full.png)
+</screenshot>
+```
+
+**Fixed aspect ratio:**
+```markdown
+<screenshot url="https://shop.com/dashboard" ratio="16/9">
+![Dashboard](images/dashboard.png)
+</screenshot>
+```
+
 ### Caching
 
 Documentation is cached for 1 hour. Clear the cache after making changes:
