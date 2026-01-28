@@ -591,13 +591,17 @@
 
             // Content area
             &__content {
+                overflow: hidden;
+
                 img {
                     display: block;
                     width: 100%;
-                    height: auto;
+                    height: 100%;
                     margin: 0;
                     border-radius: 0;
                     box-shadow: none;
+                    object-fit: cover;
+                    object-position: top;
                 }
             }
 
